@@ -12,7 +12,7 @@ from wagtail.fields import StreamField
 from wagtail.models import Page
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.models import PAGE_TEMPLATE_VAR
-from wagtailgmaps.edit_handlers import MapFieldPanel
+from wagtailgmaps.panels import MapFieldPanel
 from wagtailvideos.edit_handlers import VideoChooserPanel
 keys=load_dotenv("./livingarchive/settings/.env")
 api_key=str(os.getenv("API_KEY"))
@@ -94,7 +94,7 @@ class BlogDetailPage(Page):
        FieldPanel("image"),
         VideoChooserPanel("video"),
         FieldPanel("body", classname="full"),
-        MapFieldPanel("address", latlng=True, zoom=4),
+        MapFieldPanel("address"),
        FieldPanel("links"),
     ]
     subpage_types = []
