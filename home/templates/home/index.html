@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stories of Country — Home</title>
+  <link rel="stylesheet" href="{% static 'home/styles.css' %}">
+
+  <style>
+    /* Hero section */
+    .hero {
+      text-align: center;
+      padding: 120px 20px;
+      color: #fff;background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+            url("{% static 'home/img/home.webp' %}") no-repeat center/cover;
+      border-radius: 8px;
+
+    }
+
+    /* 3D preview box */
+    #three-preview {
+      width: 100%;
+      height: 400px;
+      margin: 40px auto;
+      background: #000;
+      border-radius: 10px;
+    }
+
+    /* Annotation tooltip */
+    #annotation {
+      position: absolute;
+      top: 100px;
+      left: 20px;
+      padding: 10px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      display: none;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header>
+    <div class="header-inner">
+      <a href="{% url 'index' %}" class="brand">
+        <div class="brand__logo"></div>
+        <span class="brand__title">Stories of Country</span>
+      </a>
+      <nav>
+        <a href="{% url 'index' %}" aria-current="page">Home</a>
+        <a href="{% url 'map' %}">Map</a>
+        <a href="{% url 'story' %}">Story</a>
+        <a href="{% url 'about' %}">About</a>
+        <a href="{% url 'three_demo' %}">3D Demo</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main id="main" class="page">
+    <section class="hero">
+      <h1>Welcome to Stories of Country</h1>
+      <p>
+        We acknowledge the Traditional Custodians of the lands and waters across Australia and pay our respect to Elders past and present.
+      </p>
+      <p>
+        Knowledge is carried through stories — of land, ancestors, seasons, and community. This platform is designed to share some of these stories in a respectful and interactive way.
+      </p>
+      <div>
+        <a href="{% url 'story' %}" class="btn">Explore Stories</a>
+        <a href="{% url 'map' %}" class="btn secondary">View Map</a>
+        <a href="{% url 'about' %}" class="btn">Learn More</a>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="center" style="margin-top:40px;">Prototype 3D Preview</h2>
+      <p class="center">This is a live demo of our annotation prototype.</p>
+      <div id="three-preview"></div>
+      <div id="annotation">Annotation: Example cultural note.</div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner center">
+      Shared with community permission. © 2025 Charles Darwin University
+    </div>
+  </footer>
+
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script>
+    // Three.js setup for index page
+    const container = document.getElementById("three-preview");
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      1000
+    );
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(container.clientWidth, 400);
+    container.appendChild(renderer.domElement);
+
+    // Cube object
+    const cube = new THREE.Mesh(
+      new THREE.BoxGeometry(),
+      new THREE.MeshStandardMaterial({ color: 0x884422 })
+    );
+    scene.add(cube);
+
+    // Light
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(3, 3, 5).normalize();
+    scene.add(light);
+
+    camera.position.z = 3;
+
+    // Raycaster for annotations
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const annotation = document.getElementById("annotation");
+
+    function onClick(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+
+      const hit = raycaster.intersectObjects([cube]);
+      annotation.style.display = hit.length ? "block" : "none";
+      if (hit.length) {
+        annotation.innerText = "Annotation: Mandilbareng story.";
+      }
+    }
+    renderer.domElement.addEventListener("click", onClick);
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+
+  <!-- App scripts -->
+  <script src="{% static 'home/app.js' %}"></script>
+</body>
+</html>
