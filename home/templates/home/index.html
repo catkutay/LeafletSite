@@ -1,0 +1,147 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Stories of Country — Home{% endblock %}
+
+{% block content %}
+  <!-- Hero -->
+  <section id="home" class="hero">
+    <h1>Welcome to Stories of Country</h1>
+    <p>
+      We acknowledge the Traditional Custodians of the lands and waters across Australia
+      and pay our respect to Elders past and present.
+    </p>
+    <p>
+      Knowledge is carried through stories — of land, ancestors, seasons, and community.
+      This platform is designed to share some of these stories in a respectful and interactive way.
+    </p>
+    <div>
+      <a href="#story" class="btn">Explore Stories</a>
+      <a href="#map" class="btn secondary">View Map</a>
+      <a href="#about" class="btn">Learn More</a>
+    </div>
+  </section>
+
+  <!-- Story -->
+  <section id="story" class="section">
+    <h2>Stories of Country</h2>
+    <p>
+      In Aboriginal culture, stories are not just tales — they are teachings. 
+      They explain how land was formed, why places are important, and how people belong to Country.
+    </p>
+
+    <h3>Mandilbareng / Mardbabay</h3>
+    <p>
+      The rock art at <strong>Mandilbareng (Mardbabay)</strong> in Western Arnhem Land is part of a
+      living cultural landscape. It connects people, ancestors, animals, and seasons. 
+      Elders and families maintain and restore these places, ensuring that knowledge continues 
+      across generations.
+    </p>
+
+    <h3>Watch the Story</h3>
+    <iframe src="https://player.vimeo.com/video/520815170?h=a8f5fcef4f" 
+            width="640" height="360" frameborder="0" allowfullscreen></iframe>
+  </section>
+
+  <!-- Map -->
+  <section id="map" class="section">
+    <h2>Interactive Map</h2>
+    <p>
+      This prototype map connects <strong>cultural sites</strong> to digital storytelling.  
+      Markers show places like <em>Mandilbareng</em>, <em>Injalak Arts Centre</em>, and waterholes that sustain communities.
+    </p>
+    <div id="leaflet-map"></div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="section">
+    <h2>About This Project</h2>
+    <p>
+      <strong>Stories of Country</strong> is a student-led research project at Charles Darwin University.  
+      It explores how modern digital tools can support the respectful sharing of Indigenous knowledge, stories, and cultural landscapes.
+    </p>
+    <p>
+      The project is not about replacing storytelling in community, but about creating <em>supportive platforms</em> that help 
+      <strong>Elders, artists, and families</strong> pass knowledge to future generations.
+    </p>
+
+    <h3>Our Tools</h3>
+    <ul>
+      <li><strong>Leaflet</strong> — for interactive maps linking Country to stories.</li>
+      <li><strong>Three.js</strong> — for 3D visualisation of landscapes and rock art.</li>
+      <li><strong>Django & Wagtail</strong> — for a flexible and accessible platform.</li>
+    </ul>
+
+    <h3>Why It Matters</h3>
+    <p>
+      Aboriginal and Torres Strait Islander cultures are some of the world’s oldest living traditions.  
+      Respecting and protecting these stories is essential for cultural survival, education, and connection to Country.  
+      This project contributes by creating a digital archive that complements community-led storytelling.
+    </p>
+
+    <!-- Screenshot -->
+    <div class="about-map">
+      <img src="{% static 'home/img/google_earth_screenshot.png' %}" 
+           alt="Annotated Map Example">
+      <p style="text-align:center; font-style:italic; margin-top:8px;">
+        Prototype map connecting cultural sites to stories.
+      </p>
+    </div>
+  </section>
+
+    <!-- 3D Demo -->
+     <section id="three-demo" class="section">
+      <h2>3D Rock Art Demo</h2>
+      <p>
+        Drag the slider to compare the rock art <strong>before</strong> and <strong>after</strong> digital restoration.  
+        This demonstrates how digital tools and 3D imaging help preserve and interpret cultural heritage.
+      </p>
+      
+      <div class="img-compare-container">
+        <img src="{% static 'home/img/after-restoration.jpg' %}" alt="After Restoration">
+  
+      <div class="img-compare-overlay">
+        <img src="{% static 'home/img/before-restoration.jpg' %}" alt="Before Restoration">
+      </div>
+      <input type="range" min="0" max="100" value="50" class="img-compare-slider">
+
+    <!-- Labels -->
+     <span class="compare-label compare-before">Before</span>
+     <span class="compare-label compare-after">After</span>
+    </div>
+</section>
+
+
+  <!-- Leaflet Map Script -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var map = L.map('leaflet-map').setView([-12.4634, 130.8456], 6);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      L.marker([-12.4634, 130.8456]).addTo(map).bindPopup("Darwin — Starting Point");
+      L.marker([-12.3325, 132.8336]).addTo(map).bindPopup("Injalak Arts Centre");
+      L.marker([-12.267, 133.05]).addTo(map).bindPopup("Mandilbareng (Mardbabay)");
+    });
+
+    // Before/After slider
+    const slider = document.querySelector(".img-compare-slider");
+    const overlay = document.querySelector(".img-compare-overlay");
+
+    if (slider && overlay) {
+      slider.addEventListener("input", (e) => {
+        overlay.style.width = `${e.target.value}%`;
+      });
+    }
+  </script> 
+<footer>
+  <div class="footer-inner">
+    <p>© {% now "Y" %} Charles Darwin University — Stories of Country Project</p>
+    <p>Built using Django, Wagtail, Leaflet & Three.js</p>
+    <p><a href="https://www.cdu.edu.au" target="_blank">Visit CDU Website</a></p>
+  </div>
+</footer>
+{% endblock %}

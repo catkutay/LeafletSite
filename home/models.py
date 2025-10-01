@@ -10,40 +10,30 @@ from wagtail.contrib.forms.models import (
     AbstractEmailForm,
     AbstractFormField
 )
-from wagtail.models import Page
-from modelcluster.fields import ParentalKey
 from wagtail.admin.panels import (
     FieldPanel,
     FieldRowPanel,
     InlinePanel,
     MultiFieldPanel
 )
-from wagtail.fields import RichTextField
-from wagtail.contrib.forms.models import AbstractFormField, AbstractEmailForm
-
 from wagtailcaptcha.models import WagtailCaptchaEmailForm
 from dotenv import load_dotenv
 load_dotenv()
 from wagtail.contrib.routable_page.models import RoutablePageMixin, route
-
-from wagtail.admin.panels import (
-    FieldPanel,
-    FieldRowPanel,
-    InlinePanel,
-    MultiFieldPanel
-)
 from captcha.fields import CaptchaField
-#from wagtail.core import blocks
-#from wagtailstreamforms.fields import BaseField, register
-  #get google maps api key from .env
-api_key=str(os.getenv("API_KEY"))
+# from wagtail.core import blocks
+# from wagtailstreamforms.fields import BaseField, register
 
-#@register('recaptcha')
+# get google maps api key from .env
+api_key = str(os.getenv("API_KEY"))
+
+
+# @register('recaptcha')
 class HomePage(WagtailCaptchaEmailForm, Page):
     """Home Page model"""
-    templates = "home/home_page.html"
+    template = "home/home_page.html"   # ✅ fixed (was 'templates')
 
-    """to limit only 1 home page"""
+    # to limit only 1 home page
     max_count = 1
     captcha = CaptchaField()
 
@@ -52,21 +42,21 @@ class HomePage(WagtailCaptchaEmailForm, Page):
     thank_you_text = RichTextField(blank=True)
 
     landing_page_template = "home/home_page_landing.html"
-
     content_panels = AbstractEmailForm.content_panels + [
-        FieldPanel('intro'),
-        InlinePanel('form_fields', label='Form Fields'),
-        FieldPanel('thank_you_text'),
-        MultiFieldPanel([
-            FieldRowPanel([
-                FieldPanel('from_address', classname="col6"),
-                FieldPanel('to_address', classname="col6"),
-            ]),
-            FieldPanel("subject"),
+    FieldPanel('banner_title'),   
+    FieldPanel('intro'),
+    InlinePanel('form_fields', label='Form Fields'),
+    FieldPanel('thank_you_text'),
+    MultiFieldPanel([
+        FieldRowPanel([
+            FieldPanel('from_address', classname="col6"),
+            FieldPanel('to_address', classname="col6"),
+        ]),
+        FieldPanel("subject"),
         ], heading="Email Settings"),
-    ]
-    
-    #to get detail from blog detail page
+        ]
+
+    # to get detail from blog detail page
     def get_context(self, request, *args, **kwargs):
         """Adding custom stuff to our context"""
         context = super().get_context(request, *args, **kwargs)
@@ -79,7 +69,7 @@ class HomePage(WagtailCaptchaEmailForm, Page):
         verbose_name_plural = "Home Pages"
 
 
-class FormField (AbstractFormField):
+class FormField(AbstractFormField):
     page = ParentalKey(
         'HomePage',
         on_delete=models.CASCADE,
