@@ -7,6 +7,7 @@ python3 -m venv env
 source env/bin/activate for Mac
 \env\Scripts\activate.bat for windows
 
+python.exe -m pip install --upgrade pip (to upgrade)
 
 pip install -r requirements.txt
 
