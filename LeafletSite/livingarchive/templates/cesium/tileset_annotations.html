@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.122.0/Build/Cesium/Widgets/widgets.css">
+  <script src="https://cdn.jsdelivr.net/npm/cesium@1.122.0/Build/Cesium/Cesium.js"></script>
+  <style>
+    html, body { height: 100%; }
+    #cesiumContainer { width: 100%; height: 85vh; }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div id="cesiumContainer"></div>
+
+<script>
+  // 1️⃣ Create viewer (no Cesium ion needed)
+  const viewer = new Cesium.Viewer("cesiumContainer", {
+    terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+    baseLayerPicker: true,
+    sceneModePicker: true,
+    timeline: false,
+    animation: false,
+    geocoder: false,
+    requestRenderMode: true
+  });
+
+  // 2️⃣ Optional: load your own 3D Tiles
+  Cesium.Cesium3DTileset.fromUrl("/static/tileset/tileset.json")
+    .then(ts => viewer.scene.primitives.add(ts))
+    .catch(() => console.log("No tileset found, skipping."));
+
+  // 3️⃣ Load existing annotations
+  fetch("/api/annotations.geojson")
+    .then(r => r.json())
+    .then(gj => Cesium.GeoJsonDataSource.load(gj))
+    .then(ds => {
+      viewer.dataSources.add(ds);
+      ds.entities.values.forEach(ent => {
+        ent.billboard = new Cesium.BillboardGraphics({
+          image: "https://cdn.jsdelivr.net/npm/ionicons@7.1.0/dist/svg/location-sharp.svg",
+          scale: 0.04
+        });
+        ent.label = new Cesium.LabelGraphics({
+          text: ent.properties.title || "Annotation",
+          pixelOffset: new Cesium.Cartesian2(0, -30)
+        });
+      });
+      viewer.flyTo(ds);
+    });
+
+  // 4️⃣ Click to add annotation
+  const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  handler.setInputAction((movement) => {
+    const pos = viewer.scene.pickPosition(movement.position);
+    if (!pos) return;
+    const carto = Cesium.Cartographic.fromCartesian(pos);
+    const lon = Cesium.Math.toDegrees(carto.longitude);
+    const lat = Cesium.Math.toDegrees(carto.latitude);
+
+    const title = prompt("Annotation title:");
+    const desc = prompt("Description:");
+    if (!title) return;
+
+    const ent = viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(lon, lat),
+      name: title,
+      description: `
+        <h3>${title}</h3>
+        <p>${desc}</p>
+        <p><a href="https://example.com/${title}" target="_blank">Link: ${title}</a></p>
+      `,
+      point: { pixelSize: 8, color: Cesium.Color.RED },
+    });
+    viewer.selectedEntity = ent;
+
+    // 5️⃣ Save to backend
+    fetch("/api/annotations/", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [lon, lat] },
+        properties: { title, description: desc }
+      })
+    });
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+</script>
+{% endblock %}
