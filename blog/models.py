@@ -13,7 +13,8 @@ from wagtail.models import Page
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.models import PAGE_TEMPLATE_VAR
 from wagtailgmaps.panels import MapFieldPanel
-from wagtailvideos.edit_handlers import VideoChooserPanel
+from wagtail.admin.panels import FieldPanel
+from wagtailmedia.models import Media
 keys=load_dotenv("./livingarchive/settings/.env")
 api_key=str(os.getenv("API_KEY"))
 
@@ -68,12 +69,12 @@ class BlogDetailPage(Page):
     )
 
     video = models.ForeignKey(
-        "wagtailvideos.Video",
-        related_name="+",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
+    'wagtailmedia.Media',
+    null=True, blank=True,
+    on_delete=models.SET_NULL,
+    related_name='+',
+    limit_choices_to={'type': 'video'},  # only allow videos in chooser
+)
     # Return a hiding version of self.email
 
     email = User(Page.owner).email.replace("@", " at ")
@@ -92,7 +93,7 @@ class BlogDetailPage(Page):
         FieldPanel("date"),
         FieldPanel("intro"),
        FieldPanel("image"),
-        VideoChooserPanel("video"),
+        FieldPanel('video'),
         FieldPanel("body", classname="full"),
         MapFieldPanel("address"),
        FieldPanel("links"),

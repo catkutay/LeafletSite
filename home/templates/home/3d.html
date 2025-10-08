@@ -82,7 +82,7 @@
   </footer>
 
   <!-- Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
   <script>
     // Setup scene
     const container = document.getElementById("three-full");
@@ -97,12 +97,19 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    // Cube as placeholder artefact
-    const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshStandardMaterial({ color: 0x884422 })
-    );
-    scene.add(cube);
+// Load your 3D model instead of cube
+const loader = new THREE.GLTFLoader();
+loader.load(
+  '/static/models/my_model.glb',
+  function (gltf) {
+    scene.add(gltf.scene);
+  },
+  undefined,
+  function (error) {  
+    console.error('Error loading model:', error);
+  }
+);
+
 
     // Lights
     const light = new THREE.DirectionalLight(0xffffff, 1);

@@ -1,14 +1,10 @@
-from wagtail.admin.edit_handlers import BaseChooserPanel
+from wagtail.admin.panels import FieldPanel
 
 from .widgets import AdminVideoChooser
 
 
-class VideoChooserPanel(BaseChooserPanel):
-    model = None
-    field_name = None
-    _target_model = None
+class VideoChooserPanel(FieldPanel):
 
-    object_type_name = "video"
-
-    def widget_overrides(self):
-        return {self.field_name: AdminVideoChooser}
+    def __init__(self, field_name, disable_comments=None, permission=None, **kwargs):
+        kwargs['widget'] = AdminVideoChooser
+        super().__init__(field_name, disable_comments=disable_comments, permission=permission, **kwargs)

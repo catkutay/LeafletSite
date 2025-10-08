@@ -7,9 +7,10 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wagtailvideos', '0012_remove_unique_constraint'),
-        ('blog', '0015_alter_blogdetailpage_video'),
-    ]
+    ('blog', '0015_alter_blogdetailpage_video'),
+    ('wagtailmedia', '0001_initial'),  # ✅ or whichever initial migration exists
+]
+
 
     operations = [
         migrations.AlterField(

@@ -30,15 +30,14 @@ WAGTAIL_ADDRESS_MAP_KEY = api_key
 INSTALLED_APPS = [
     "home",
     "search",
-   # "wagtailgmaps",
-    "captcha",
-    "wagtailcaptcha",
+    "wagtailgmaps",
     "blog",
-    "wagtailvideos",
-    # "wagtail.contrib.modeladmin",
+    "wagtailmedia",
+    #"wagtail.contrib.modeladmin",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.routable_page",
+    "wagtail.contrib.search_promotions",
     "wagtail.embeds",
     "wagtail.sites",
     "wagtail.users",
@@ -48,8 +47,8 @@ INSTALLED_APPS = [
     "wagtail.search",
     "wagtail.admin",
     "wagtail",
-    "wagtailcaptcha",
     "captcha",
+    "wagtailcaptcha",
     "wagtailmenus",
     "user_group_management",
     "modelcluster",
@@ -65,6 +64,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "livingarchive",
+]
+
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",      # keep Django admin login
+    "allauth.account.auth_backends.AuthenticationBackend",  # allauth
 ]
 
 SITE_ID = 1
@@ -196,9 +201,9 @@ WAGTAIL_FRONTEND_LOGIN_TEMPLATE = "account/login.html"
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 
-ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+ACCOUNT_LOGIN_METHODS = {"username", "email"} 
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*"] 
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGOUT_ON_GET = True
@@ -206,7 +211,6 @@ ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
 ACCOUNT_PRESERVE_USERNAME_CASING = False
 ACCOUNT_SESSION_REMEMBER = True
-ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 ACCOUNT_USERNAME_BLACKLIST = ["admin", "moderator", "editor"]
 ACCOUNT_USERNAME_MIN_LENGTH = 3
 ACCOUNT_SIGNUP_FORM_CLASS = "livingarchive.forms.LocalSignupForm"

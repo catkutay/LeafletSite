@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wagtailvideos', '0012_remove_unique_constraint'),
+        ('wagtailvideos', '0001_initial'),
         ('blog', '0002_rename_blog_image_blogdetailpage_image'),
     ]
 

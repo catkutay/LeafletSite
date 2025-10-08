@@ -8,7 +8,7 @@ import mirage.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wagtailvideos', '0012_remove_unique_constraint'),
+        ('wagtailvideos', '0001_initial'),
         ('blog', '0004_alter_blogdetailpage_intro'),
     ]
 
