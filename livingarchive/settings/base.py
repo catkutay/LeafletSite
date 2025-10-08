@@ -30,7 +30,7 @@ WAGTAIL_ADDRESS_MAP_KEY = api_key
 INSTALLED_APPS = [
     "home",
     "search",
-    "wagtailgmaps",
+   # "wagtailgmaps",
     "blog",
     "wagtailvideos",
     "wagtail.contrib.modeladmin",
