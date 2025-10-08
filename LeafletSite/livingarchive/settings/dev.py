@@ -1,5 +1,7 @@
 from .base import *
 
+INSTALLED_APPS = [a for a in INSTALLED_APPS if a != 'wagtail.contrib.modeladmin']
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

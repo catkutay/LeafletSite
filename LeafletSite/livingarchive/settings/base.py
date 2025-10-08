@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     # 'wagtail',
     "wagtailvideos",
    # "wagtail.contrib.modeladmin",
+    "captcha",
+    "wagtailcaptcha",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.routable_page",
