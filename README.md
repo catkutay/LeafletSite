@@ -22,3 +22,8 @@ python3 manage.py makemigrations
 python manage.py migrate 
 
 python manage.py runserver
+
+#Link to the website
+http://127.0.0.1:8005/
+
+#create superuser admin
