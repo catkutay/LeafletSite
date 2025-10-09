@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "wagtailgmaps",
     "blog",
     "wagtailmedia",
+    "wagtailvideos",
     #"wagtail.contrib.modeladmin",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",

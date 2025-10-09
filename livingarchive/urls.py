@@ -31,6 +31,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
 
     path("cms/", include(wagtail_urls)),  # wagtail site under /cms/
+    
 ]
 
 if settings.DEBUG:

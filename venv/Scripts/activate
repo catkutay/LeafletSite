@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\xampp\htdocs\LeafletSite\venv"
+VIRTUAL_ENV="C:\xampp\htdocs\LeafletSite (7)\LeafletSite\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

@@ -1,6 +1,35 @@
 {% extends "home/base.html" %}
 {% load static %}
 
+{% block extra_head %}
+  <!-- Cesium widgets CSS -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/cesium@1.122.0/Build/Cesium/Widgets/widgets.css">
+
+  <!-- Cesium core JS -->
+  <script src="https://cdn.jsdelivr.net/npm/cesium@1.122.0/Build/Cesium/Cesium.js"></script>
+
+  <style>
+  /* Ensure Cesium map sits above Leaflet and accepts clicks */
+  #cesiumContainer {
+    width: 100%;
+    height: 75vh;
+    position: relative;
+    z-index: 1;             /* stays above other content */
+    pointer-events: auto;   /* accepts mouse input */
+    display: none;          /* only shown when 3D button clicked */
+  }
+
+  /* Leaflet map defaults */
+  #leaflet-map {
+    width: 100%;
+    height: 75vh;
+    pointer-events: auto;   /* receives input when visible */
+  }
+</style>
+  
+{% endblock %}
+
 {% block title %}Stories of Country — Home{% endblock %}
 
 {% block content %}
@@ -44,14 +73,28 @@
   </section>
 
   <!-- Map -->
-  <section id="map" class="section">
-    <h2>Interactive Map</h2>
-    <p>
-      This prototype map connects <strong>cultural sites</strong> to digital storytelling.  
-      Markers show places like <em>Mandilbareng</em>, <em>Injalak Arts Centre</em>, and waterholes that sustain communities.
-    </p>
-    <div id="leaflet-map"></div>
-  </section>
+<!-- Map -->
+<section id="map" class="section">
+  <h2>Interactive Map</h2>
+  <p>
+    This prototype map connects <strong>cultural sites</strong> to digital storytelling.  
+    Markers show places like <em>Mandilbareng</em>, <em>Injalak Arts Centre</em>, and waterholes that sustain communities.
+  </p>
+
+  <!-- 3D toggle buttons -->
+  <div style="margin: 1rem 0;">
+    <button id="to3d" class="btn">View in 3D</button>
+    <button id="to2d" class="btn secondary" style="display: none;">Back to 2D</button>
+  </div>
+
+  <!-- 2D Leaflet map -->
+  <div id="leaflet-map"></div>
+
+  <!-- 3D Cesium map (hidden initially) -->
+  <div id="cesiumContainer" style="width:100%; height:75vh; display:none;"></div>
+</section>
+
+
 
   <!-- About -->
   <section id="about" class="section">
@@ -136,7 +179,200 @@
         overlay.style.width = `${e.target.value}%`;
       });
     }
-  </script> 
+    
+    // ====== Cesium 3D Map Toggle ======
+// ====== Cesium 3D Map Toggle (single source of truth) ======
+  const to3dBtn = document.getElementById('to3d');
+  const to2dBtn = document.getElementById('to2d');
+  const map2d   = document.getElementById('leaflet-map');
+  const map3d   = document.getElementById('cesiumContainer');
+
+  let viewer = null;
+  let cesiumReady = false;
+
+  // toggle → 3D
+  to3dBtn?.addEventListener('click', async () => {
+    map2d.style.display = 'none';
+    map3d.style.display = 'block';
+    to3dBtn.style.display = 'none';
+    to2dBtn.style.display = 'inline-block';
+
+    if (!cesiumReady) {
+      await initCesium();
+      cesiumReady = true;
+    }
+    // tell Cesium its container size changed
+    viewer?.resize?.();
+    viewer?.scene?.requestRender?.();
+  });
+
+  // toggle → 2D
+  to2dBtn?.addEventListener('click', () => {
+    map3d.style.display = 'none';
+    map2d.style.display = 'block';
+    to2dBtn.style.display = 'none';
+    to3dBtn.style.display = 'inline-block';
+  });
+
+  async function initCesium() {
+    console.log('[Cesium] init starting');
+
+    // 1) Create a viewer with token-free OSM imagery
+    viewer = new Cesium.Viewer('cesiumContainer', {
+      imageryProvider: new Cesium.UrlTemplateImageryProvider({
+        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        credit: '© OpenStreetMap'
+      }),
+      baseLayerPicker: false,
+      sceneModePicker: true,
+      terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      timeline: false,
+      animation: false,
+      geocoder: false,
+      requestRenderMode: false   // keep rendering while we debug “white screen”
+    });
+    window._viewer = viewer; // handy for DevTools
+    console.log('[Cesium] viewer created', Cesium.VERSION);
+
+     loadPinsFromLocalStorage(viewer);
+
+    // === 2) Put camera somewhere sane so you see the globe immediately
+const LON = 133.05, LAT = -12.267;
+viewer.camera.flyTo({
+  destination: Cesium.Cartesian3.fromDegrees(LON, LAT, 300000)
+});
+
+// === 3) Place model flat on the ground at lon/lat ===
+const surface = Cesium.Cartesian3.fromDegrees(LON, LAT, 0);
+
+// Use heading/pitch/roll (degrees) to orient the model in world space
+const hpr = new Cesium.HeadingPitchRoll(
+  Cesium.Math.toRadians(0),   // heading (rotate around up)
+  Cesium.Math.toRadians(0),   // pitch   (tilt forward/back)
+  Cesium.Math.toRadians(0)    // roll    (bank)
+);
+
+// Build a local ENU frame so “up” points away from Earth at that location
+let modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(surface, hpr);
+
+// Load the GLB; tell Cesium the model’s authoring axis.
+// Most GIS / CAD exports are **Z-up**. If your export was Y-up, switch to Axis.Y.
+const model = await Cesium.Model.fromGltfAsync({
+  url: '/static/models/topo_fixed.glb?v=3',
+  modelMatrix,
+  upAxis: Cesium.Axis.Z,       // try Axis.Z first; if wrong, try Axis.Y
+  forwardAxis: Cesium.Axis.X,  // safe default; try Axis.Y if your model faces sideways
+  scale: 1,                    // start neutral; we’ll scale after we see it
+  minimumPixelSize: 128,
+  cull: false,
+});
+
+// (Optional but very helpful while debugging)
+model.color = Cesium.Color.fromCssColorString('#dddddd');
+model.colorBlendMode = Cesium.ColorBlendMode.REPLACE;
+model.silhouetteColor = Cesium.Color.BLACK;
+model.silhouetteSize  = 2;
+model.backFaceCulling = false;
+
+viewer.scene.primitives.add(model);
+await viewer.zoomTo(model);
+
+// === 4) Re-center the model so its own origin sits on our lon/lat ===
+// Many exports are not centered at the model origin; this recenters it.
+model.readyPromise.then(() => {
+  const negateCenter = Cesium.Cartesian3.negate(
+    model.boundingSphere.center, new Cesium.Cartesian3()
+  );
+  model.modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+    model.modelMatrix, negateCenter, new Cesium.Matrix4()
+  );
+  viewer.scene.requestRender();
+});
+  }
+
+  // --- Allow users to click to add pins ---
+let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+handler.setInputAction(function (click) {
+  // Convert mouse click to a globe position
+  let earthPosition = viewer.scene.pickPosition(click.position);
+
+  if (Cesium.defined(earthPosition)) {
+    // Convert Cartesian to lat/lon
+    const carto = Cesium.Cartographic.fromCartesian(earthPosition);
+    const lat = Cesium.Math.toDegrees(carto.latitude);
+    const lon = Cesium.Math.toDegrees(carto.longitude);
+
+    // Ask user for title & description
+    const title = prompt("Enter title for this location:");
+    const description = prompt("Enter description:");
+
+    if (title) {
+      const entity = viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
+        billboard: {
+          image: 'https://cdn.jsdelivr.net/npm/ionicons@7.1.0/dist/svg/location-sharp.svg',
+          width: 28,
+          height: 28,
+          color: Cesium.Color.fromCssColorString('#2e7bf6'),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY
+        },
+        label: {
+          text: title,
+          font: '16px "Inter", system-ui, sans-serif',
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 3,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          pixelOffset: new Cesium.Cartesian2(0, -24),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY
+        },
+        description: `<p>${description || ''}</p>`
+      });
+
+      console.log('Added pin:', { title, description, lat, lon });
+      // Optional: persist it in browser storage
+      savePinToLocalStorage({ title, description, lat, lon });
+    }
+  }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+// Save to browser (localStorage)
+function savePinToLocalStorage(pin) {
+  let pins = JSON.parse(localStorage.getItem('cesiumPins') || '[]');
+  pins.push(pin);
+  localStorage.setItem('cesiumPins', JSON.stringify(pins));
+}
+
+// Reload saved pins
+function loadPinsFromLocalStorage(viewer) {
+  const pins = JSON.parse(localStorage.getItem('cesiumPins') || '[]');
+  pins.forEach(p => {
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, 0),
+      billboard: {
+        image: 'https://cdn.jsdelivr.net/npm/ionicons@7.1.0/dist/svg/location-sharp.svg',
+        width: 28,
+        height: 28,
+        color: Cesium.Color.fromCssColorString('#2e7bf6'),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
+      },
+      label: {
+        text: p.title,
+        font: '16px "Inter", system-ui, sans-serif',
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 3,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        pixelOffset: new Cesium.Cartesian2(0, -24),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
+      },
+      description: `<p>${p.description}</p>`
+    });
+  });
+}
+</script>
+
 <footer>
   <div class="footer-inner">
     <p>© {% now "Y" %} Charles Darwin University — Stories of Country Project</p>

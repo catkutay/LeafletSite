@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
     ('blog', '0015_alter_blogdetailpage_video'),
-    ('wagtailmedia', '0001_initial'),  # ✅ or whichever initial migration exists
+    ('wagtailmedia', '0001_initial'),  
 ]
 
 
